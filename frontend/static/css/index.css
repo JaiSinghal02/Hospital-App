@@ -1,0 +1,24 @@
+body{
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    color: rgb(32 40 83);
+    background-color: rgb(218, 224, 231);
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+#main{
+    position: fixed;
+    width: 100%;
+    left: 0;
+    top: 0;
+    height: 100%;
+    overflow-y: scroll;
+    background-color: rgb(218, 224, 231);
+    
+}
+#app{
+    background-color: rgb(218, 224, 231);
+    height: auto;
+    
+}
