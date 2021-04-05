@@ -8,8 +8,9 @@ User._meta.get_field('email')._unique = True
 
 class Patient(models.Model):
     user=models.OneToOneField(User,on_delete=models.CASCADE)
-    date=models.DateField(null=True)
-    slotTime=models.TimeField(null=True)
+    # date=models.DateField(null=True)
+    # slotTime=models.CharField(max_length=20,null=True)
+    slot=models.JSONField(default={}) #will store (date,time) as key value pairs
     name=models.CharField(max_length=50)
     email=models.EmailField(max_length=254,default="jai@gmail.com")
     address=models.TextField(max_length=400, default="as")

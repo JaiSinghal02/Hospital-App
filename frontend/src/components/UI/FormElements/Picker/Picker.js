@@ -5,6 +5,8 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import {connect} from 'react-redux'
+import * as actionTypes from '../../../../store/actions/action'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -16,30 +18,44 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function SimpleSelect() {
+function Picker(props) {
   const classes = useStyles();
-  const [age, setAge] = React.useState('');
+  const [time, setTime] = React.useState('');
 
   const handleChange = (event) => {
-    setAge(event.target.value);
+    props.setSlot(event.target.value)
+    setTime(event.target.value);
+    console.log("time",event.target.value)
+    
   };
-
+  let Options=null;
+  if(props.slots){
+    Options=props.slots.map((val,i)=>{
+      // console.log("MENU ITEM VAL-->",i)
+      return (<MenuItem data-my-value={i} value={val.slice(0,5)}>{val.slice(0,5)}</MenuItem>)
+    })
+  }
   return (
     <div>
       <FormControl variant="outlined" className={classes.formControl}>
-        <InputLabel id="demo-simple-select-outlined-label">Age</InputLabel>
+        <InputLabel id="demo-simple-select-outlined-label">Time</InputLabel>
         <Select
           labelId="demo-simple-select-outlined-label"
           id="demo-simple-select-outlined"
-          value={age}
+          value={time}
           onChange={handleChange}
-          label="Age"
+          label="Time"
         >
-          <MenuItem value={10}>Ten</MenuItem>
-          <MenuItem value={20}>Twenty</MenuItem>
-          <MenuItem value={30}>Thirty</MenuItem>
+          {Options}
         </Select>
       </FormControl>
     </div>
   );
 }
+const mapDispatchToProps = dispatch =>{
+  return{
+    setSlot: (slot)=> dispatch({type:actionTypes.SET_TIME_SLOT,slot:slot})
+  }
+}
+
+export default connect(null,mapDispatchToProps)(Picker);

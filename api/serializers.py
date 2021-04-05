@@ -4,7 +4,7 @@ from .models import Patient
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model= Patient
-        fields='__all__'
+        fields=('date','slotTime',)
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model= Patient
@@ -12,8 +12,9 @@ class UserSerializer(serializers.ModelSerializer):
 class SlotTimeSerializer(serializers.ModelSerializer):
     class Meta:
         model= Patient
-        fields= ('slotTime',)
+        fields= ('slot',)
 class BookingSerializer(serializers.ModelSerializer):
+    slot=serializers.JSONField()
     class Meta:
         model= Patient
-        fields= ('slotTime','date',)
+        fields=('slot',)

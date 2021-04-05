@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .serializers import PatientSerializer
-from .serializers import UserSerializer
 from .serializers import SlotTimeSerializer
+from .serializers import UserSerializer
 from .serializers import BookingSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,9 +13,10 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated,IsAdminUser
 from django.contrib.auth.models import User,auth
 from rest_framework.authtoken.models import Token
+from datetime import date
 
 
-time_slots= ['10:00:00', '10:30:00', '11:00:00', '12:00:00', '12:30:00', '14:00:00', '14:30:00', '15:00:00', '15:30:00', '17:30:00','18:00:00','18:30:00','19:00:00','20:00:00']
+time_slots= ['10:00', '10:30', '11:00', '12:00', '12:30', '14:00', '14:30', '15:00', '15:30', '17:30','18:00','18:30','19:00','20:00']
 class bookingList(APIView):
     permission_classes=[IsAdminUser,]
     def get(self,request):
@@ -35,20 +36,71 @@ class bookTheSlot(APIView):
     permission_classes=[IsAuthenticated,]
     def post(self,request):
         user= Patient.objects.get(user=request.user)
-        serializer=BookingSerializer(user,data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data,status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        req_date=str(list(request.data.keys())[0])
+        print("req_booking=",request.data)
+        result={}
+        try:
+            hasslot=Patient.objects.filter(slot__has_key=req_date).get(user=request.user)
+            result["status"]="Failure"
+            result["message"]="Already have a booking on {0}".format(req_date)
+        except Patient.DoesNotExist:
+            print("No booking on request day")
+            curr_date=str(date.today())
+            userSlots=list(Patient.objects.values_list('slot',flat=True).get(user=request.user).keys())
+            userSlots.sort()
+            totalSlots=len(userSlots)
+            if(curr_date in userSlots):
+                pos=userSlots.index(curr_date)
+                activeSlots=totalSlots-pos
+            
+            else:
+                if(len(userSlots)!=0):
+                    if(userSlots[0]>curr_date):
+                        pos=0
+                
+                else:
+                    pos=-1
+                    for i in range(totalSlots-1):
+                        if(userSlots[i]<curr_date and userSlots[i+1]>curr_date):
+                            pos=i+1
+                            break
+                
+                if(pos==-1):
+                    totalSlots=-1
+                activeSlots=totalSlots-pos
+            print("Active SLots=",activeSlots)
+            if(activeSlots==2):
+                result["status"]="Failure"
+                result["message"]="Cannot have more than 2 active bookings"
+            else:
+                user.slot.update(request.data)
+                user.save()
+                serializer=BookingSerializer(user,data=request.data)
+                # print("SLOT BOOKING DATABASE-->",serializer.initial_data)
+                # if serializer.is_valid():
+                #     serializer.save()
+                    
+                return Response(serializer.initial_data,status=status.HTTP_201_CREATED)
+                print("ERROR->",serializer.errors)
+                return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+            
+        return JsonResponse(data=result,status=400)
+        
 class availableSlots(APIView):
     def get(self,request,selected_day):
-        ref_slots=time_slots
-        BookedTime= Patient.objects.filter(date=selected_day)
-        serializer=SlotTimeSerializer(BookedTime,many=True)
+        print("selected day is",selected_day)
+        ref_slots=[]
+        for i in time_slots:
+            ref_slots.append(i)
+        BookedTime= Patient.objects.filter(slot__has_key=selected_day)
+        for i in BookedTime:
+            print("QUER-->",i)
+        serializer=BookingSerializer(BookedTime,many=True)
         for i in serializer.data:
-            if(i["slotTime"] in ref_slots):
-                ref_slots.remove(i["slotTime"])
-        print(ref_slots)
+            print("Databse-->",list(i["slot"].values())[0])
+            if(list(i["slot"].values())[0] in ref_slots):
+                ref_slots.remove(list(i["slot"].values())[0])
+        print(time_slots)
         return JsonResponse(ref_slots,safe=False)
 class createUser(APIView):
     def post(self,request):
