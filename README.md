@@ -1,6 +1,6 @@
 # Hospital-App
 
-<h3>This is a Web Application which allows user to book a appointment with a Doctor at the Hospital "GET WELL SOON"</h3>
+<h3>This is a Web Application which allows users to book an appointment with a Doctor at the "GET WELL SOON" Hospital</h3>
 <h2>Home Page</h2>
 <img src="https://user-images.githubusercontent.com/53816453/113694722-bef3db00-96ed-11eb-8e13-757818405c7b.png" width="600"  >
 
