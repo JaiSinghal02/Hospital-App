@@ -46,7 +46,8 @@
 <ul>
 <li>git clone https://github.com/JaiSinghal02/Hospital-App.git</li>
 <li>Inside the root folder run: python manage.py runserver</li>
-<li>In another Terminal open frontend folder and run: npm run dev</li>
+<li>In another Terminal open frontend folder and run(to install required node modules): npm install</li>
+<li>In the same terminal with frontend folder opened, run: npm run dev</li>
 <li>Open browser and visit: http://localhost:8000/</li>
 </ul>
 
