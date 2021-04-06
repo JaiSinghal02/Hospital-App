@@ -6,20 +6,20 @@ import {
   MuiPickersUtilsProvider,
   KeyboardDatePicker,
 } from '@material-ui/pickers';
-import {connect} from 'react-redux'
-import * as actionTypes from  '../../../../store/actions/action'
+import { connect } from 'react-redux'
+import * as actionTypes from '../../../../store/actions/action'
 
 function DatePicker(props) {
   // The first commit of Material-UI
   const [selectedDate, setSelectedDate] = React.useState(new Date());
 
   const handleDateChange = (date) => {
-    props.setDate(date.getFullYear()+"-"+(Math.floor((date.getMonth()+1)/10)===0?("0"+(date.getMonth()+1)):(date.getMonth()+1))+"-"+(Math.floor((date.getDate())/10)===0?("0"+(date.getDate())):(date.getDate())))
+    props.setDate(date.getFullYear() + "-" + (Math.floor((date.getMonth() + 1) / 10) === 0 ? ("0" + (date.getMonth() + 1)) : (date.getMonth() + 1)) + "-" + (Math.floor((date.getDate()) / 10) === 0 ? ("0" + (date.getDate())) : (date.getDate())))
     setSelectedDate(date);
-    
+
   };
-  let today=new Date()
-  today.setDate(today.getDate()+30);
+  let today = new Date()
+  today.setDate(today.getDate() + 30);
   return (
     <MuiPickersUtilsProvider utils={DateFnsUtils}>
       <Grid container justify="space-around">
@@ -37,14 +37,15 @@ function DatePicker(props) {
           }}
           disablePast="true"
           maxDate={today}
+          format="dd/MM/yyyy"
         />
       </Grid>
     </MuiPickersUtilsProvider>
   );
 }
-const mapDispatchToProps = dispatch=>{
-    return {
-        setDate: (date)=> dispatch({type: actionTypes.SET_DATE,date:date})
-    }
+const mapDispatchToProps = dispatch => {
+  return {
+    setDate: (date) => dispatch({ type: actionTypes.SET_DATE, date: date })
+  }
 }
-export default connect(null,mapDispatchToProps)(DatePicker);
+export default connect(null, mapDispatchToProps)(DatePicker);

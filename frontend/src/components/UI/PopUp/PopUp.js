@@ -28,11 +28,15 @@ export default function PopUp(props) {
     }
 
     setOpen(false);
+    setTimeout(()=>{
+      setOpen(true);
+    },1000)
   };
 
   return (
     <div className={classes.root}>
-      <Snackbar open={props.open&& open} autoHideDuration={3000} onClose={handleClose}>
+      <Snackbar open={props.open&& open} autoHideDuration={props.timer} onClose={handleClose}> 
+      {/* /severity= "error,warning,info,success" */}
         <Alert onClose={handleClose} severity={props.severity}>
           {props.message}
         </Alert>

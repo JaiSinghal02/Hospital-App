@@ -4,7 +4,7 @@ from .models import Patient
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model= Patient
-        fields=('date','slotTime',)
+        fields='__all__'
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model= Patient

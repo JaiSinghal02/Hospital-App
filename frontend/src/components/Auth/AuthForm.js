@@ -14,8 +14,10 @@ import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import Backdrop from '../UI/backdrop/backdrop'
 import PopUp from '../UI/PopUp/PopUp';
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { connect } from 'react-redux';
+import * as actionTypes from '../../store/actions/action'
 
 
 
@@ -39,122 +41,136 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function SignIn(props) {
-  
+function SignIn(props) {
+
   const classes = useStyles();
   const [formobj, changeForm] = useState({ title: "Sign up", info: "Already have an account? Sign in" });
   const [user, changeUser] = useState("Patient");
-  const [loading,changeLoading] =useState(false)
-  const [popup,changePopUp] =useState({message:"",severity:""}) //severity= "error,warning,info,success"
-  const [signuperr,changeSignUpError]=useState([false,false,false,false,false,false]);
-  const [siginerr,changeSignInError]=useState([false,false]);
-  const [authErr,changeAuthErr]=useState("");
-  useEffect(()=>{
-    let arr1=Array(6).fill(false)
+  const [loading, changeLoading] = useState(false)
+  const [popup, changePopUp] = useState({ message: "", severity: "" })
+  const [signuperr, changeSignUpError] = useState([false, false, false, false, false, false]);
+  const [siginerr, changeSignInError] = useState([false, false]);
+  const [authErr, changeAuthErr] = useState("");
+  useEffect(() => {
+    let arr1 = Array(6).fill(false)
     changeSignUpError(arr1)
-    let arr2=Array(2).fill(false)
+    let arr2 = Array(2).fill(false)
     changeSignInError(arr2)
     changeAuthErr("")
-  },[formobj["title"],user])
+  }, [formobj["title"], user])
   const changeFormValues = () => {
     if (formobj["title"] === "Sign in") { changeForm(prev => ({ ...prev, title: "Sign up", info: "Already have an account? Sign in" })) }
     else { changeForm(prev => ({ ...prev, title: "Sign in", info: "New User? Sign up" })) }
 
   }
-  const toggleLoading = ()=>{
-    changeLoading(prev=>!prev)
+  const toggleLoading = () => {
+    changeLoading(prev => !prev)
   }
   const changeType = () => {
-    if (user === "Patient") { changeUser("Staff"); changeForm(prev => ({ ...prev, title: "Sign in"})) }
-    else { changeUser("Patient"); changeForm(prev => ({ ...prev, title: "Sign in" })) }
+    if (user === "Patient") { changeUser("Staff"); changeForm(prev => ({ ...prev, title: "Sign in" })) }
+    else { changeUser("Patient"); changeForm(prev => ({ ...prev, title: "Sign in", info: "New User? Sign up" })) }
   }
-  const validateEmail= (email)=>{
-    let check=true;
-    const re= /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
-    check&=re.test(email)
+  const validateEmail = (email) => {
+    let check = true;
+    const re = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
+    check &= re.test(email)
     return check
   }
-  const afterAuth = (user)=>{
-    localStorage.setItem('token',user["token"])
-    localStorage.setItem('first_name',user["first_name"])
-    localStorage.setItem('last_name',user["last_name"])
-    localStorage.setItem('email',user["email"])
-    changePopUp(prev=>({...prev,message:"Authentication Successful",severity:"success"}))
-    setTimeout(()=>{
-      props.history.push('/account/signup/addinfo')
-
-    },2000)
+  const afterAuth = (user, mode = "Signup") => {
+    localStorage.setItem('token', user["token"])
+    localStorage.setItem('first_name', user["first_name"])
+    localStorage.setItem('last_name', user["last_name"])
+    localStorage.setItem('email', user["email"])
+    localStorage.setItem('isStaff', user["is_staff"])
+    props.logIn()
+    changePopUp(prev => ({ ...prev, message: "Authentication Successful", severity: "success" }))
+    let redirect = '/account/signup/addinfo'
+    if (mode == "Signin") {
+      props.setStaffStatus(user["is_staff"])
+      redirect = '/'
+    }
+    toggleLoading();
+    setTimeout(() => {
+      props.history.push(redirect)
+    }, 2000)
   }
-  const validateForm = (mode,user,p1,p2="")=>{
-    let check=false;
-    if(mode==="Signup"){
-      let arr=Array(6).fill(false)
-        if(user["first_name"].trim().length<3){arr[0]=true}
-        if(user["last_name"].trim().length<3){arr[1]=true}
-        if(user["username"].trim().length<4){arr[2]=true}
-        if(user["username"].trim()==="Hospital_Admin" || user["username"].trim()==="GetWellSoon_Staff"){arr[2]=true}
-        if(!validateEmail(user["email"])){arr[3]=true}
-        if(p1.trim().length<5){arr[4]=true}
-        if(p1!==p2){arr[5]=true}
-        for(let i=0;i<6;++i){if(arr[i]){check=arr[i]}}
-        changeSignUpError(arr);
+  const validateForm = (mode, user, p1, p2 = "") => {
+    let check = false;
+    if (mode === "Signup") {
+      let arr = Array(6).fill(false)
+      if (user["first_name"].trim().length < 3) { arr[0] = true }
+      if (user["last_name"].trim().length < 3) { arr[1] = true }
+      if (user["username"].trim().length < 4) { arr[2] = true }
+      if (user["username"].trim() === "Hospital_Admin" || user["username"].trim() === "GetWellSoon_Staff") { arr[2] = true }
+      if (!validateEmail(user["email"])) { arr[3] = true }
+      if (p1.trim().length < 5) { arr[4] = true }
+      if (p1 !== p2) { arr[5] = true }
+      for (let i = 0; i < 6; ++i) { if (arr[i]) { check = arr[i] } }
+      changeSignUpError(arr);
     }
-    else{
-      let arr=Array(2).fill(false)
-        if(user["username"].trim().length<4){arr[0]=true}
-        if(p1.trim().length<5){arr[1]=true}
-        for(let i=0;i<2;++i){if(arr[i]){check=arr[i]}}
-        changeSignInError(arr);
+    else {
+      let arr = Array(2).fill(false)
+      if (user["username"].trim().length < 4) { arr[0] = true }
+      if (p1.trim().length < 5) { arr[1] = true }
+      for (let i = 0; i < 2; ++i) { if (arr[i]) { check = arr[i] } }
+      changeSignInError(arr);
     }
-    if(check){
-      changePopUp(prev=>({...prev,message:"Please check your entries",severity:"Error"}))
+    if (check) {
+      changePopUp(prev => ({ ...prev, message: "Please check your entries", severity: "error" }))
     }
     return check
   }
-  const submitAuthForm = (e)=>{
+  const submitAuthForm = (e) => {
     e.preventDefault()
     toggleLoading();
-    if(formobj["title"]==="Sign up"){
-    const first_name=e.target[0].value
-    const last_name=e.target[2].value
-    const username=e.target[4].value
-    const email=e.target[6].value
-    const password1=e.target[8].value
-    const password2=e.target[10].value
-    const user={username: username,password: password1,email: email,first_name: first_name,last_name: last_name};
-    if(validateForm("Signup",user,password1,password2)){
-      toggleLoading();
-    }
-    else{
-      axios.post("http://localhost:8000/api/account/signup",user)
-        .then(res=>{console.log(res);toggleLoading();afterAuth(res.data)} )
-        .catch(err=>{console.log(err);changeAuthErr(err.response.data.message);toggleLoading();})
-    }
-  }
-    
-    else{
-      const username=e.target[0].value
-      const password=e.target[2].value
-      const user={username: username,password:password};
-      if(validateForm("Signin",user,password)){
+    if (formobj["title"] === "Sign up") {
+      const first_name = e.target[0].value
+      const last_name = e.target[2].value
+      const username = e.target[4].value
+      const email = e.target[6].value
+      const password1 = e.target[8].value
+      const password2 = e.target[10].value
+      const user = { username: username, password: password1, email: email, first_name: first_name, last_name: last_name };
+      if (validateForm("Signup", user, password1, password2)) {
         toggleLoading();
-        changeAuthErr("")
       }
-      else{
-
-        axios.post("http://localhost:8000/api/account/login",user)
-          .then(res=>{console.log(res);toggleLoading();afterAuth(res.data)})
-          .catch(err=>{console.log(err.response.data); changeAuthErr(err.response.data.message); toggleLoading();})
+      else {
+        axios.post("http://localhost:8000/api/account/signup", user)
+          .then(res => { afterAuth(res.data) })
+          .catch(err => { changeAuthErr(err.response.data.message); })
       }
     }
-    
+
+    else {
+      const username = e.target[0].value
+      const password = e.target[2].value
+      const userInfo = { username: username, password: password, authLevel: user };
+      if (validateForm("Signin", userInfo, password)) {
+        toggleLoading();
+      }
+      else {
+        axios.post("http://localhost:8000/api/account/login", userInfo)
+          .then(res => { toggleLoading(); afterAuth(res.data, "Signin") })
+          .catch(err => {
+            toggleLoading();
+            if (err.response) {
+              changePopUp(prev => ({ ...prev, message: `${err.response.data.message}`, severity: "error" }))
+              changeAuthErr(err.response.data.message);
+            }
+            else {
+              changeAuthErr("Some Error Occured");
+            }
+          })
+      }
+    }
+
 
   }
 
   let password2 = null;
-  let email=null;
-  let first_name=null;
-  let last_name=null;
+  let email = null;
+  let first_name = null;
+  let last_name = null;
   if (user == "Patient" && formobj["title"] === "Sign up") {
     first_name = <TextField
       variant="outlined"
@@ -191,38 +207,38 @@ export default function SignIn(props) {
       id="password2"
       autoComplete="current-password"
       error={signuperr[5]}
-      helperText={signuperr[5]?"Passwords (Case-Sensitive) must match":""}
+      helperText={signuperr[5] ? "Passwords (Case-Sensitive) must match" : ""}
     />
-    email=<TextField
-    variant="outlined"
-    margin="normal"
-    required
-    fullWidth
-    name="email"
-    label="Email Address"
-    required="true"
-    id="email"
-    autoComplete="email"
-    error={signuperr[3]}
-  />
+    email = <TextField
+      variant="outlined"
+      margin="normal"
+      required
+      fullWidth
+      name="email"
+      label="Email Address"
+      required="true"
+      id="email"
+      autoComplete="email"
+      error={signuperr[3]}
+    />
   }
-  let loader=null
-  if(loading){loader=<Backdrop open="true"/>}
-  else{loader=null}
-  let showErr=authErr
-  let showPopUp=null;
-  if(popup["message"] !==""){
-    showPopUp=<PopUp severity={popup["severity"]} open="true" message={popup["message"]}/>
-    setTimeout(()=>{
-      changePopUp(prev=>({...prev,message:"",severity:""}))
-    },3000)
+  let loader = null
+  if (loading) { loader = <Backdrop open="true" /> }
+  else { loader = null }
+  let showErr = authErr
+  let showPopUp = null;
+  if (popup["message"] !== "") {
+    showPopUp = <PopUp severity={popup["severity"]} open="true" message={popup["message"]} timer="2000" />
+    setTimeout(() => {
+      changePopUp(prev => ({ ...prev, message: "", severity: "" }))
+    }, 2000)
   }
   return (
     <Container component="main" maxWidth="xs">
       {loader}
       <CssBaseline />
       <div className={classes.paper}>
-        <Typography component="h1" variant="h5" style={{ paddingBottom: "10px",paddingLeft:"25px" }}>
+        <Typography component="h1" variant="h5" style={{ paddingBottom: "10px", paddingLeft: "25px" }}>
           {user} Authentication
         </Typography>
         <Avatar className={classes.avatar}>
@@ -231,7 +247,7 @@ export default function SignIn(props) {
         <Typography component="h1" variant="h5">
           {formobj["title"]}
         </Typography>
-        <form className={classes.form} noValidate onSubmit={(e)=>submitAuthForm(e)}>
+        <form className={classes.form} noValidate onSubmit={(e) => submitAuthForm(e)}>
           {first_name}
           {last_name}
           <TextField
@@ -243,11 +259,11 @@ export default function SignIn(props) {
             error="true"
             required="true"
             label="User Name"
-            helperText={formobj["title"]=="Sign up"?"It will be used for future login":""}
+            helperText={formobj["title"] == "Sign up" ? "It will be used for future login" : ""}
             name="username"
             autoComplete="username"
             error={signuperr[2] || siginerr[0]}
-            helperText={signuperr[2]?"User Name must be 4 or more characters":""}
+            helperText={signuperr[2] ? "User Name must be 4 or more characters" : ""}
           />
           {email}
           <TextField
@@ -262,12 +278,12 @@ export default function SignIn(props) {
             id="password"
             autoComplete="current-password"
             error={signuperr[4] || siginerr[1]}
-            helperText={(signuperr[4] || siginerr[1])?"Password must be 6 or more characters long":""}
+            helperText={(signuperr[4] || siginerr[1]) ? "Password must be 6 or more characters long" : ""}
           />
           {password2}
           <div>
 
-          {showErr}
+            {showErr}
           </div>
           {/* <FormControlLabel
             control={<Checkbox value="remember" color="primary" />}
@@ -279,7 +295,7 @@ export default function SignIn(props) {
             variant="contained"
             color="primary"
             className={classes.submit}
-            
+
           >
             {formobj["title"]}
           </Button>
@@ -308,3 +324,11 @@ export default function SignIn(props) {
     </Container>
   );
 }
+
+const mapDispatchToProps = dispatch => {
+  return {
+    logIn: () => dispatch({ type: actionTypes.SET_USER_LOG_IN }),
+    setStaffStatus: (isStaff) => dispatch({ type: actionTypes.SET_STAFF_STATUS, isStaff: isStaff })
+  }
+}
+export default connect(null, mapDispatchToProps)(SignIn)

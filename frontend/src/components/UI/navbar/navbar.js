@@ -5,32 +5,37 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
-import {Link as RouterLink, NavLink} from 'react-router-dom';
-import { MemoryRouter as Router } from 'react-router';
+import LocalHospitalIcon from '@material-ui/icons/LocalHospital';
+import { Link as RouterLink, NavLink } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
   },
   menuButton: {
-    marginRight: theme.spacing(2),
+    marginRight: theme.spacing(1),
   },
   title: {
     flexGrow: 1,
   },
 }));
 
-export default function ButtonAppBar(props) {
+function NavBar(props) {
   const classes = useStyles();
-  let token=localStorage.getItem("token");
-  let navItems=(<NavLink to='/account/signup' style={{color: "inherit",textDecoration: "none"}}>
-  <Button color="inherit" >Login</Button>
+  let token = localStorage.getItem("token");
+  let navItems = (<NavLink to='/account/signup' style={{ color: "inherit", textDecoration: "none" }}>
+    <Button color="inherit" >Login</Button>
   </NavLink>)
-  if(token){
-    navItems=(<NavLink to='/account/slotbooking' style={{color: "inherit",textDecoration: "none"}}>
-    <Button color="inherit" >Book Appointment</Button>
-    </NavLink>)
+  if (token) {
+    let path = '/account/slotbooking'
+    if (props.isStaff === true) {
+      path = '/account/appointments'
+    }
+    navItems = (<><NavLink to={path} style={{ color: "inherit", textDecoration: "none" }}>
+      <Button color="inherit" >Appointment</Button>
+    </NavLink><NavLink to='/' style={{ color: "inherit", textDecoration: "none" }}>
+        <Button color="inherit" onClick={props.logOutUser} >Log Out</Button>
+      </NavLink></>)
   }
   return (
 
@@ -38,14 +43,20 @@ export default function ButtonAppBar(props) {
     <div className={classes.root}>
       <AppBar position="static">
         <Toolbar>
-          {/* <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu">
-            <MenuIcon />
-          </IconButton> */}
+          <NavLink to="/" style={{ color: "inherit", textDecoration: "none" }}>
+          <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu">
+            <LocalHospitalIcon className={classes.menuButton}/>
+            <Typography variant="h6" className={classes.title}>
+            Get Well Soon
+          </Typography>
+          </IconButton>
+
+          </NavLink>
           <Typography variant="h6" className={classes.title}>
             {props.title}
           </Typography>
-          <NavLink to='/' style={{color: "inherit",textDecoration: "none"}}>
-          <Button color="inherit" >Home</Button>
+          <NavLink to='/' style={{ color: "inherit", textDecoration: "none" }}>
+            <Button color="inherit" >Home</Button>
           </NavLink>
           {navItems}
         </Toolbar>
@@ -53,3 +64,4 @@ export default function ButtonAppBar(props) {
     </div>
   );
 }
+export default NavBar

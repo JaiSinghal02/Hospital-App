@@ -51,7 +51,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-export default function Checkout() {
+export default function Checkout(props) {
     const classes = useStyles();
     // const [activeStep, setActiveStep] = React.useState(0);
 
@@ -82,7 +82,7 @@ export default function Checkout() {
                         ) : 
                         ( */}
                             <React.Fragment>
-                            <AddressForm />
+                            <AddressForm {...props}/>
                                 {/* <div className={classes.buttons}>
                                     <Button
                                         variant="contained"

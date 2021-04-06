@@ -1,3 +1,4 @@
+import { requirePropFactory } from '@material-ui/core';
 import React, {Component} from 'react';
 import {render} from 'react-dom';
 import {Link} from 'react-router-dom';
@@ -9,7 +10,10 @@ export default class Home extends Component{
     render(){
         return(
             <>
-            <h1>HELLO man This is the main page</h1>
+            <h1 style={{marginLeft:"20px"}}>Get Well Soon</h1>
+            <div style={{width:"80%"}}>
+                <h3 style={{marginLeft:"22px"}}>Book a Appointment with our World Class Doctors Today !</h3>
+            </div>
             </>
         )
     }

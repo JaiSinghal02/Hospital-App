@@ -18,11 +18,18 @@ from datetime import date
 
 time_slots= ['10:00', '10:30', '11:00', '12:00', '12:30', '14:00', '14:30', '15:00', '15:30', '17:30','18:00','18:30','19:00','20:00']
 class bookingList(APIView):
-    permission_classes=[IsAdminUser,]
-    def get(self,request):
-        Patients= Patient.objects.all()
-        serializer=PatientSerializer(Patients,many=True)
-        return Response(serializer.data)
+    def get(self,request,selected_day):
+        if(request.user.is_staff or request.user.is_superuser):
+            Patients= Patient.objects.filter(slot__has_key=selected_day)
+            serializer=PatientSerializer(Patients,many=True)
+            print("GET-->",serializer.data)
+            return Response(serializer.data)
+        
+        result={}
+        result["status"]="Failure"
+        result["message"]="Un-Authorised Access"
+        return Response(data=result,status=401)
+        
 class addUserInfo(APIView):
     permission_classes=[IsAuthenticated,]
     def post(self,request):
@@ -54,6 +61,7 @@ class bookTheSlot(APIView):
                 activeSlots=totalSlots-pos
             
             else:
+                pos=0
                 if(len(userSlots)!=0):
                     if(userSlots[0]>curr_date):
                         pos=0
@@ -65,8 +73,8 @@ class bookTheSlot(APIView):
                             pos=i+1
                             break
                 
-                if(pos==-1):
-                    totalSlots=-1
+                    if(pos==-1):
+                        totalSlots=-1
                 activeSlots=totalSlots-pos
             print("Active SLots=",activeSlots)
             if(activeSlots==2):
@@ -75,17 +83,22 @@ class bookTheSlot(APIView):
             else:
                 user.slot.update(request.data)
                 user.save()
-                serializer=BookingSerializer(user,data=request.data)
-                # print("SLOT BOOKING DATABASE-->",serializer.initial_data)
-                # if serializer.is_valid():
-                #     serializer.save()
-                    
-                return Response(serializer.initial_data,status=status.HTTP_201_CREATED)
-                print("ERROR->",serializer.errors)
-                return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+                result["status"]="Success"
+                result["message"]="Appointment booked successfully"
+                result["slot"]=request.data
+                return Response(data=result,status=status.HTTP_201_CREATED)
+                result["status"]="Failure"
+                result["message"]="Appointment booking Failed"
+                return Response(data=result,status=status.HTTP_400_BAD_REQUEST)
             
         return JsonResponse(data=result,status=400)
-        
+class pastBookings(APIView):
+    permission_classes=[IsAuthenticated,]
+    def get(self,request):
+        userBookings=Patient.objects.values_list('slot',flat=True).get(user=request.user)
+        print(userBookings)
+        return Response(data=userBookings,status=200)
+
 class availableSlots(APIView):
     def get(self,request,selected_day):
         print("selected day is",selected_day)
@@ -136,15 +149,26 @@ class loginUser(APIView):
         user=auth.authenticate(username=username,password=password)
         result={}
         status=None
+        check=True
         if user is not None:
-            auth.login(request,user)
-            token=Token.objects.get(user=user).key
-            result["status"]= "true"
-            result["message"]="User Logged In"
-            result["first_name"]=user.first_name
-            result["last_name"]=user.last_name
-            result["token"]=token
-            status=200
+            if(request.data['authLevel']=="Staff"):
+                if(user.is_staff!=True):
+                    check=False
+            if(check):
+                auth.login(request,user)
+                token=Token.objects.get(user=user).key
+                result["status"]= "true"
+                result["message"]="User Logged In"
+                result["first_name"]=user.first_name
+                result["last_name"]=user.last_name
+                result["email"]=user.email
+                result["token"]=token
+                result["is_staff"]=request.user.is_staff
+                status=200
+            else:
+                result["status"]= "false"
+                result["message"]="Invalid Credentials"
+                status=401
         else:
             result["status"]= "false"
             result["message"]="Invalid Credentials"
@@ -156,5 +180,13 @@ class logoutUser(APIView):
         result={}
         result["status"]= "Success"
         result["message"]="User Logged Out"
-        return JsonResponse(result)
+        print("LOGGED OUT-->",result)
+        return JsonResponse(result,status=200)
+class checkStaffStatus(APIView):
+    def get(self,request):
+        result={}
+        result["status"]= "Success"
+        result["is_staff"]=request.user.is_staff
+        print(result)
+        return JsonResponse(result,status=200)
 

@@ -30,9 +30,13 @@
     "@material-ui/pickers": "^3.3.10",
     "antd": "^4.15.0",
     "axios": "^0.21.1",
+    "css-loader": "^5.2.0",
+    "file-loader": "^6.2.0",
     "moment": "^2.29.1",
     "react-redux": "^7.2.3",
     "react-router-dom": "^5.2.0",
-    "redux": "^4.0.5"
+    "redux": "^4.0.5",
+    "style-loader": "^2.0.0",
+    "url-loader": "^4.1.1"
   }
 }
